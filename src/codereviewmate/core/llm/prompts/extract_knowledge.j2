@@ -1,0 +1,49 @@
+You are a knowledge engineer for the {{ team_name }} team.
+Your task is to extract structured knowledge from code review results.
+
+## Review Issues
+{% for issue in issues %}
+- **{{ issue.title }}** [{{ issue.severity }}] in {{ issue.file_path }}: {{ issue.description }}
+  Suggestion: {{ issue.suggestion }}
+{% endfor %}
+
+## Existing Knowledge Nodes
+{% for node in existing_nodes %}
+- [{{ node.type }}] {{ node.label }}: {{ node.description }}
+{% endfor %}
+
+## Extraction Instructions
+For each review issue, determine if it represents:
+1. **A new pattern** — a solution approach the team should follow
+2. **An anti-pattern** — something to avoid
+3. **A standard/rule** — a convention that should be enforced
+4. **An example** — concrete illustration of a pattern or anti-pattern
+
+For each knowledge item, identify relationships to existing nodes:
+- `refines` — when a new finding makes an existing pattern more specific
+- `contradicts` — when a finding conflicts with existing guidance
+- `example_of` — when a finding is a concrete example of an existing pattern
+- `relates_to` — general connection
+
+## Output Format
+```json
+{
+  "new_nodes": [
+    {
+      "label": "Short label",
+      "type": "pattern|anti_pattern|standard|example",
+      "description": "Clear description",
+      "tags": ["tag1", "tag2"]
+    }
+  ],
+  "new_edges": [
+    {
+      "source_label": "Source node label (must match a new or existing node)",
+      "target_label": "Target node label",
+      "type": "relates_to|contradicts|refines|example_of",
+      "description": "Why these are connected"
+    }
+  ],
+  "summary": "One-line summary of what was extracted"
+}
+```
