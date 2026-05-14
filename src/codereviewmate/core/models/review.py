@@ -109,3 +109,9 @@ class ReviewReport(BaseModel):
         pre_ok = self.pre_commit.passed if self.pre_commit else True
         deep_ok = self.deep.passed if self.deep else True
         return pre_ok and deep_ok
+
+    def _count_by_severity(self) -> dict[Severity, int]:
+        counts: dict[Severity, int] = {}
+        for issue in self.all_issues:
+            counts[issue.severity] = counts.get(issue.severity, 0) + 1
+        return counts

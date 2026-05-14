@@ -1,0 +1,72 @@
+name: CodeReviewMate
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  push:
+    branches: [main, master, develop]
+
+jobs:
+  pre-commit:
+    name: Fast Pre-commit Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install CodeReviewMate
+        run: pip install codereviewmate
+
+      - name: Run pre-commit checks
+        run: codereviewmate review pre-commit --repo . --all
+
+  deep-review:
+    name: Deep Architecture Review
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: pre-commit
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install CodeReviewMate
+        run: pip install codereviewmate
+
+      - name: Run deep review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          codereviewmate review full \
+            --repo . \
+            --pr "${{ github.event.pull_request.number }}" \
+            --platform github \
+            --output codereviewmate-report.md
+
+      - name: Post review comments
+        if: github.event_name == 'pull_request'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Post report as PR comment
+          if [ -f codereviewmate-report.md ]; then
+            gh pr comment "${{ github.event.pull_request.number }}" \
+              --body-file codereviewmate-report.md
+          fi
+
+      - name: Upload report artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codereviewmate-report
+          path: codereviewmate-report.md

@@ -1,0 +1,21 @@
+# CodeReviewMate pre-commit hooks
+# Install in your repo with:
+#   pre-commit add-hook -t pre-commit -f .pre-commit-hooks.yaml --repo-url https://github.com/lightbearer1/CodeReviewMate
+
+- id: codereviewmate-check
+  name: CodeReviewMate Pre-commit Check
+  description: Fast pre-commit checks — security, style, bug patterns, complexity
+  entry: codereviewmate review pre-commit --repo . --staged
+  language: python
+  language_version: python3
+  types: [python, javascript, typescript, go, java, rust]
+  pass_filenames: false
+  always_run: true
+
+- id: codereviewmate-check-file
+  name: CodeReviewMate Single File Check
+  description: Check a single file on commit
+  entry: codereviewmate review check
+  language: python
+  language_version: python3
+  types: [python, javascript, typescript, go, java, rust]
